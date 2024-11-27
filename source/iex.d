@@ -86,51 +86,6 @@ enum MessageType : Byte {
 
 // IEX messages
 
-struct SystemEventMessage {
-    enum SystemEvent : Byte {
-        O = 0x4f,
-        S = 0x53,
-        R = 0x52,
-        M = 0x4d,
-        E = 0x45,
-        C = 0x43
-    }
-
-    align(1):
-    MessageType type;
-    SystemEvent event;
-    mixin(generateTime!Timestamp("time"));
-}
-
-struct OperationalHaltStatusMessage {
-    enum Status : Byte {
-        O = 0x4f,
-        N = 0x4e
-    }
-
-    align(1):
-    MessageType type;
-    Status operationalHaltStatus;
-    mixin(generateTime!Timestamp("time"));
-    mixin(generateString!String("symbol"));
-}
-
-struct TradingStatusMessage {
-    enum Status : Byte {
-        H = 0x48,
-        O = 0x4f,
-        P = 0x50,
-        T = 0x54
-    }
-
-    align(1):
-    MessageType type;
-    Status tradingStatus;
-    mixin(generateTime!Timestamp("time"));
-    mixin(generateString!String("symbol"));
-    mixin(generateString!ShortString("reason"));
-}
-
 struct AuctionInformationMessage {
     enum AuctionType : Byte {
         O = 0x4f,
@@ -158,6 +113,62 @@ struct AuctionInformationMessage {
     mixin(generatePrice("upperAuctionCollar"));
 }
 
+struct OfficialPriceMessage {
+    enum PriceType : Byte {
+        opening = 0x51,
+        closing = 0x4d
+    }
+
+    align(1):
+    MessageType type;
+    PriceType priceType;
+    mixin(generateTime!Timestamp("time"));
+    mixin(generateString!String("symbol"));
+    mixin(generatePrice("price"));
+}
+
+struct OperationalHaltStatusMessage {
+    enum Status : Byte {
+        O = 0x4f,
+        N = 0x4e
+    }
+
+    align(1):
+    MessageType type;
+    Status operationalHaltStatus;
+    mixin(generateTime!Timestamp("time"));
+    mixin(generateString!String("symbol"));
+}
+
+struct QuoteUpdateMessage {
+    enum MarketSessionFlag {
+        regular = 0,
+        prePost = 1
+    }
+
+    enum SymbolAvailabilityFlag {
+        active = 0,
+        notActive = 1
+    }
+
+    struct QuoteUpdateFlags {
+        mixin(bitfields!(
+            uint, "", 6,
+            MarketSessionFlag, "marketSession", 1,
+            SymbolAvailabilityFlag, "symbolAvailability", 1));
+    }
+
+    align(1):
+    MessageType type;
+    QuoteUpdateFlags flags;
+    mixin(generateTime!Timestamp("time"));
+    mixin(generateString!String("symbol"));
+    Integer bidSize;
+    mixin(generatePrice("bidPrice"));
+    mixin(generatePrice("askPrice"));
+    Integer askSize;
+}
+
 struct RetailLiquidityIndicatorMessage {
     enum Indicator : Byte {
         NA = 0x20,
@@ -171,6 +182,78 @@ struct RetailLiquidityIndicatorMessage {
     Indicator indicator;
     mixin(generateTime!Timestamp("time"));
     mixin(generateString!String("symbol"));
+}
+
+struct SecurityDirectoryMessage {
+    enum ETPFlag {
+        notETP = 0,
+        ETP = 1
+    }
+
+    enum WhenIssuedFlag {
+        notWhenIssued = 0,
+        whenIssued = 1
+    }
+
+    enum TestSecurityFlag {
+        notTest = 0,
+        test = 1
+    }
+
+    struct SecurityDirectoryFlags {
+        mixin(bitfields!(
+            uint, "", 5,
+            ETPFlag, "etp", 1,
+            WhenIssuedFlag, "whenIssued", 1,
+            TestSecurityFlag, "testSecurity", 1));
+    }
+
+    align(1):
+    MessageType type;
+    SecurityDirectoryFlags flags;
+    mixin(generateTime!Timestamp("time"));
+    mixin(generateString!String("symbol"));
+    Integer roundLotSize;
+    mixin(generatePrice("adjustedPOCPrice"));
+    Byte luldTier;
+}
+
+struct ShortSalePriceTestStatusMessage {
+    enum Status : Byte {
+        notInEffect = 0x0,
+        inEffect = 0x1
+    }
+
+    enum Detail : Byte {
+        none = 0x20,
+        activated = 0x41,
+        continued = 0x43,
+        deactivated = 0x44,
+        notAvailable = 0x4e
+    }
+
+    align(1):
+    MessageType type;
+    Status shortSalePriceTestStatus;
+    mixin(generateTime!Timestamp("time"));
+    mixin(generateString!String("symbol"));
+    Detail detail;
+}
+
+struct SystemEventMessage {
+    enum SystemEvent : Byte {
+        O = 0x4f,
+        S = 0x53,
+        R = 0x52,
+        M = 0x4d,
+        E = 0x45,
+        C = 0x43
+    }
+
+    align(1):
+    MessageType type;
+    SystemEvent event;
+    mixin(generateTime!Timestamp("time"));
 }
 
 struct TradeReportMessage {
@@ -219,101 +302,18 @@ struct TradeReportMessage {
     Long id;
 }
 
-struct ShortSalePriceTestStatusMessage {
+struct TradingStatusMessage {
     enum Status : Byte {
-        notInEffect = 0x0,
-        inEffect = 0x1
-    }
-
-    enum Detail : Byte {
-        none = 0x20,
-        activated = 0x41,
-        continued = 0x43,
-        deactivated = 0x44,
-        notAvailable = 0x4e
+        H = 0x48,
+        O = 0x4f,
+        P = 0x50,
+        T = 0x54
     }
 
     align(1):
     MessageType type;
-    Status shortSalePriceTestStatus;
+    Status tradingStatus;
     mixin(generateTime!Timestamp("time"));
     mixin(generateString!String("symbol"));
-    Detail detail;
-}
-
-struct QuoteUpdateMessage {
-    enum MarketSessionFlag {
-        regular = 0,
-        prePost = 1
-    }
-
-    enum SymbolAvailabilityFlag {
-        active = 0,
-        notActive = 1
-    }
-
-    struct QuoteUpdateFlags {
-        mixin(bitfields!(
-            uint, "", 6,
-            MarketSessionFlag, "marketSession", 1,
-            SymbolAvailabilityFlag, "symbolAvailability", 1));
-    }
-
-    align(1):
-    MessageType type;
-    QuoteUpdateFlags flags;
-    mixin(generateTime!Timestamp("time"));
-    mixin(generateString!String("symbol"));
-    Integer bidSize;
-    mixin(generatePrice("bidPrice"));
-    mixin(generatePrice("askPrice"));
-    Integer askSize;
-}
-
-struct SecurityDirectoryMessage {
-    enum ETPFlag {
-        notETP = 0,
-        ETP = 1
-    }
-
-    enum WhenIssuedFlag {
-        notWhenIssued = 0,
-        whenIssued = 1
-    }
-
-    enum TestSecurityFlag {
-        notTest = 0,
-        test = 1
-    }
-
-    struct SecurityDirectoryFlags {
-        mixin(bitfields!(
-            uint, "", 5,
-            ETPFlag, "etp", 1,
-            WhenIssuedFlag, "whenIssued", 1,
-            TestSecurityFlag, "testSecurity", 1));
-    }
-
-    align(1):
-    MessageType type;
-    SecurityDirectoryFlags flags;
-    mixin(generateTime!Timestamp("time"));
-    mixin(generateString!String("symbol"));
-    Integer roundLotSize;
-    mixin(generatePrice("adjustedPOCPrice"));
-    Byte luldTier;
-}
-
-struct OfficialPriceMessage {
-    enum PriceType : Byte {
-        opening = 0x51,
-        closing = 0x4d
-    }
-
-    align(1):
-    MessageType type;
-    PriceType priceType;
-    mixin(generateTime!Timestamp("time"));
-    mixin(generateString!String("symbol"));
-    mixin(generatePrice("price"));
+    mixin(generateString!ShortString("reason"));
 }
