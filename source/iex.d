@@ -20,49 +20,42 @@ alias Timestamp   = long;
 alias EventTime   = uint;
 
 // boilerplate functions
-auto generateTime(T) (string fieldName) if (is(T == Timestamp) || is(T == EventTime)) {
+auto convertIexTime(T) (T time) if (is(T == Timestamp) || is(T == EventTime)) {
     static if (is(T == EventTime)) {
+        // EventTime is seconds since epoch
         enum UNITS = 1;
     } else {
+        // Timestamp is nanoseconds since epoch
         enum UNITS = 1_000_000_000.0;
     }
 
-    auto memberName = "_" ~ fieldName;
+    real frac;
+    real seconds;
 
+    frac = modf(time / UNITS, seconds);
+    auto rvalue = SysTime.fromUnixTime(seconds.to!long, UTC());
+    rvalue.fracSecs = usecs((frac * 1_000_000).to!int);
+    return rvalue.toISOExtString;
+}
+
+auto generateTime(T) (string name) if (is(T == Timestamp) || is(T == EventTime)) {
     return iq{
-        @serdeIgnore $(T.stringof) $(memberName); 
-        string $(fieldName)() const @property {
-            real frac;
-            real seconds;
-
-            frac = modf($(memberName) / $(UNITS), seconds);
-            
-            auto rvalue = SysTime.fromUnixTime(seconds.to!long, UTC());
-            rvalue.fracSecs = usecs((frac * 1_000_000).to!int);
-            return rvalue.toISOExtString;
-        }
+        @serdeTransformOut!(a => convertIexTime(a))
+        $(T.stringof) $(name);
     }.text;
 }
 
-auto generateString(T) (string fieldName) if (is(T == String) || is(T == ShortString)) {
-    auto memberName = "_" ~ fieldName;
-
+auto generateString(T) (string name) if (is(T == String) || is(T == ShortString)) {
     return iq{
-        @serdeIgnore $(T.stringof) $(memberName);
-        auto $(fieldName)() const @property {
-            return $(memberName).stripRight;
-        }
+        @serdeTransformOut!(a => a.stripRight.to!string)
+        $(T.stringof) $(name);
     }.text;
 }
 
-auto generatePrice(string fieldName) {
-    auto memberName = "_" ~ fieldName;
-    
+auto generatePrice(string name) {
     return iq{
-        @serdeIgnore Price $(memberName);
-        auto $(fieldName)() const @property {
-            return $(memberName) / 10_000.0;
-        }
+        @serdeTransformOut!(a => a / 10_000.0)
+        Price $(name);
     }.text;
 }
 
