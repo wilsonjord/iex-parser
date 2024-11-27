@@ -96,19 +96,19 @@ struct AuctionInformationMessage {
     }
 
     align(1):
-    MessageType type;
+    MessageType messageType;
     AuctionType auctionType;
-    mixin(generateTime!Timestamp("time"));
+    mixin(generateTime!Timestamp("timestamp"));
     mixin(generateString!String("symbol"));
     Integer pairedShares;
-    mixin(generatePrice("reference"));
-    mixin(generatePrice("indicativeClearing"));
+    mixin(generatePrice("referencePrice"));
+    mixin(generatePrice("indicativeClearingPrice"));
     Integer imbalanceShares;
     Byte imbalanceSide;
     Byte extensionNumber;
-    mixin(generateTime!EventTime("scheduledTime"));
-    mixin(generatePrice("clearing"));
-    mixin(generatePrice("collarReference"));
+    mixin(generateTime!EventTime("scheduledAuctionTime"));
+    mixin(generatePrice("auctionBookClearingPrice"));
+    mixin(generatePrice("collarReferencePrice"));
     mixin(generatePrice("lowerAuctionCollar"));
     mixin(generatePrice("upperAuctionCollar"));
 }
@@ -120,11 +120,11 @@ struct OfficialPriceMessage {
     }
 
     align(1):
-    MessageType type;
+    MessageType messageType;
     PriceType priceType;
-    mixin(generateTime!Timestamp("time"));
+    mixin(generateTime!Timestamp("timestamp"));
     mixin(generateString!String("symbol"));
-    mixin(generatePrice("price"));
+    mixin(generatePrice("officialPrice"));
 }
 
 struct OperationalHaltStatusMessage {
@@ -134,9 +134,9 @@ struct OperationalHaltStatusMessage {
     }
 
     align(1):
-    MessageType type;
+    MessageType messageType;
     Status operationalHaltStatus;
-    mixin(generateTime!Timestamp("time"));
+    mixin(generateTime!Timestamp("timestamp"));
     mixin(generateString!String("symbol"));
 }
 
@@ -159,9 +159,9 @@ struct QuoteUpdateMessage {
     }
 
     align(1):
-    MessageType type;
+    MessageType messageType;
     QuoteUpdateFlags flags;
-    mixin(generateTime!Timestamp("time"));
+    mixin(generateTime!Timestamp("timestamp"));
     mixin(generateString!String("symbol"));
     Integer bidSize;
     mixin(generatePrice("bidPrice"));
@@ -178,9 +178,9 @@ struct RetailLiquidityIndicatorMessage {
     }
 
     align(1):
-    MessageType type;
-    Indicator indicator;
-    mixin(generateTime!Timestamp("time"));
+    MessageType messageType;
+    Indicator retailLiquidityIndicator;
+    mixin(generateTime!Timestamp("timestamp"));
     mixin(generateString!String("symbol"));
 }
 
@@ -209,9 +209,9 @@ struct SecurityDirectoryMessage {
     }
 
     align(1):
-    MessageType type;
+    MessageType messageType;
     SecurityDirectoryFlags flags;
-    mixin(generateTime!Timestamp("time"));
+    mixin(generateTime!Timestamp("timestamp"));
     mixin(generateString!String("symbol"));
     Integer roundLotSize;
     mixin(generatePrice("adjustedPOCPrice"));
@@ -233,9 +233,9 @@ struct ShortSalePriceTestStatusMessage {
     }
 
     align(1):
-    MessageType type;
+    MessageType messageType;
     Status shortSalePriceTestStatus;
-    mixin(generateTime!Timestamp("time"));
+    mixin(generateTime!Timestamp("timestamp"));
     mixin(generateString!String("symbol"));
     Detail detail;
 }
@@ -251,9 +251,9 @@ struct SystemEventMessage {
     }
 
     align(1):
-    MessageType type;
-    SystemEvent event;
-    mixin(generateTime!Timestamp("time"));
+    MessageType messageType;
+    SystemEvent systemEvent;
+    mixin(generateTime!Timestamp("timestamp"));
 }
 
 struct TradeReportMessage {
@@ -293,13 +293,13 @@ struct TradeReportMessage {
     }
 
     align(1):
-    MessageType type;
-    SalesConditionFlags salesConditionFlags;
-    mixin(generateTime!Timestamp("time"));
+    MessageType messageType;
+    SalesConditionFlags saleConditionFlags;
+    mixin(generateTime!Timestamp("timestamp"));
     mixin(generateString!String("symbol"));
     Integer size;
     mixin(generatePrice("price"));
-    Long id;
+    Long tradeId;
 }
 
 struct TradingStatusMessage {
@@ -311,9 +311,9 @@ struct TradingStatusMessage {
     }
 
     align(1):
-    MessageType type;
+    MessageType messageType;
     Status tradingStatus;
-    mixin(generateTime!Timestamp("time"));
+    mixin(generateTime!Timestamp("timestamp"));
     mixin(generateString!String("symbol"));
     mixin(generateString!ShortString("reason"));
 }
