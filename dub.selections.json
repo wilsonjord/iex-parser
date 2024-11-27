@@ -1,0 +1,12 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"asdf": "0.7.17",
+		"commandr": "1.1.0",
+		"io": "0.3.5",
+		"iopipe": "0.2.5",
+		"mir-algorithm": "3.22.1",
+		"mir-core": "1.7.1",
+		"silly": "1.1.1"
+	}
+}

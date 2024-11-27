@@ -13,6 +13,8 @@
 
 # Executables
 *.exe
+iex-parser
+iex-parser-test-library
 
 # DUB
 .dub
