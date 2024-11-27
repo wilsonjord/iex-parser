@@ -147,14 +147,14 @@ struct QuoteUpdateMessage {
     }
 
     enum SymbolAvailabilityFlag {
-        active = 0,
+        active    = 0,
         notActive = 1
     }
 
     struct QuoteUpdateFlags {
         mixin(bitfields!(
-            uint, "", 6,
-            MarketSessionFlag, "marketSession", 1,
+            uint,                   "", 6,
+            MarketSessionFlag,      "marketSession", 1,
             SymbolAvailabilityFlag, "symbolAvailability", 1));
     }
 
@@ -187,17 +187,17 @@ struct RetailLiquidityIndicatorMessage {
 struct SecurityDirectoryMessage {
     enum ETPFlag {
         notETP = 0,
-        ETP = 1
+        ETP    = 1
     }
 
     enum WhenIssuedFlag {
         notWhenIssued = 0,
-        whenIssued = 1
+        whenIssued    = 1
     }
 
     enum TestSecurityFlag {
         notTest = 0,
-        test = 1
+        test    = 1
     }
 
     struct SecurityDirectoryFlags {
