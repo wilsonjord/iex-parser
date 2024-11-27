@@ -202,9 +202,9 @@ struct SecurityDirectoryMessage {
 
     struct SecurityDirectoryFlags {
         mixin(bitfields!(
-            uint, "", 5,
-            ETPFlag, "etp", 1,
-            WhenIssuedFlag, "whenIssued", 1,
+            uint,             "", 5,
+            ETPFlag,          "etp", 1,
+            WhenIssuedFlag,   "whenIssued", 1,
             TestSecurityFlag, "testSecurity", 1));
     }
 
@@ -221,14 +221,14 @@ struct SecurityDirectoryMessage {
 struct ShortSalePriceTestStatusMessage {
     enum Status : Byte {
         notInEffect = 0x0,
-        inEffect = 0x1
+        inEffect    = 0x1
     }
 
     enum Detail : Byte {
-        none = 0x20,
-        activated = 0x41,
-        continued = 0x43,
-        deactivated = 0x44,
+        none         = 0x20,
+        activated    = 0x41,
+        continued    = 0x43,
+        deactivated  = 0x44,
         notAvailable = 0x4e
     }
 
@@ -259,37 +259,37 @@ struct SystemEventMessage {
 struct TradeReportMessage {
     enum IntermarketSweepFlag {
         nonISO = 0,
-        ISO = 1
+        ISO    = 1
     }
 
     enum ExtendedHoursFlag {
-        regular = 0,
+        regular  = 0,
         extended = 1
     }
 
     enum OddLotFlag {
         roundMixed = 0,
-        oddLot = 1
+        oddLot     = 1
     }
 
     enum TradeThroughExemptFlag {
-        subjectToRule = 0,
+        subjectToRule    = 0,
         notSubjectToRule = 1
     }
 
     enum SinglePriceCrossTradeFlag {
         continuousTrading = 0,
-        singlePriceCross = 1
+        singlePriceCross  = 1
     }
 
     struct SalesConditionFlags {
         mixin(bitfields!(
-            uint, "", 3,
+            uint,                      "", 3,
             SinglePriceCrossTradeFlag, "singlePriceCross", 1,
-            TradeThroughExemptFlag, "tradeThroughExempt", 1,
-            OddLotFlag, "oddLot", 1,
-            ExtendedHoursFlag, "extendedHours", 1,
-            IntermarketSweepFlag, "intermarketSweep", 1));
+            TradeThroughExemptFlag,    "tradeThroughExempt", 1,
+            OddLotFlag,                "oddLot", 1,
+            ExtendedHoursFlag,         "extendedHours", 1,
+            IntermarketSweepFlag,      "intermarketSweep", 1));
     }
 
     align(1):
