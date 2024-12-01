@@ -7,63 +7,65 @@ import std.conv;
 import std.datetime;
 import std.bitmanip;
 
-import asdf;
+import mir.ser.json;
+import mir.small_string;
 
-// data types used in spec
+// IEX data types
 alias Long        = long;
-alias Price       = long;
 alias Integer     = int;
 alias Byte        = ubyte;
-alias String      = char[8];
-alias ShortString = char[4];
-alias Timestamp   = long;
-alias EventTime   = uint;
+alias String      = SmallStringType!8;
+alias ShortString = SmallStringType!4;
 
-// boilerplate functions
-auto convertIexTime(T) (T time) if (is(T == Timestamp) || is(T == EventTime)) {
-    static if (is(T == EventTime)) {
-        // EventTime is seconds since epoch
-        enum UNITS = 1;
-    } else {
-        // Timestamp is nanoseconds since epoch
-        enum UNITS = 1_000_000_000.0;
+@serdeProxy!(const(char)[])
+struct SmallStringType(int T) {
+    SmallString!T str;
+
+    auto toString() const @safe {
+        return str[].stripRight;
     }
+}
 
+auto convertIexTime(long time) {
     real frac;
     real seconds;
 
-    frac = modf(time / UNITS, seconds);
+    frac = modf(time / 1_000_000_000.0, seconds); // nanoseconds
+
     auto rvalue = SysTime.fromUnixTime(seconds.to!long, UTC());
     rvalue.fracSecs = usecs((frac * 1_000_000).to!int);
+
     return rvalue.toISOExtString;
 }
 
-auto generateTime(T) (string name) if (is(T == Timestamp) || is(T == EventTime)) {
-    return iq{
-        @serdeTransformOut!(a => convertIexTime(a))
-        $(T.stringof) $(name);
-    }.text;
+@serdeProxy!(const(char)[])
+struct Timestamp {
+    long time;
+
+    auto toString() const @safe {
+        return time.convertIexTime;
+}
 }
 
-auto generateString(T) (string name) if (is(T == String) || is(T == ShortString)) {
-    return iq{
-        @serdeTransformOut!(a => a.stripRight.to!string)
-        $(T.stringof) $(name);
-    }.text;
+@serdeProxy!(const(char)[])
+struct EventTime {
+    uint time;
+
+    auto toString() const @safe {
+        return SysTime.fromUnixTime(time.to!long, UTC()).toISOExtString;
+    }
 }
 
-auto generatePrice(string name) {
-    return iq{
-        @serdeTransformOut!(a => a / 10_000.0)
-        Price $(name);
-    }.text;
+@serdeProxy!double
+struct Price {
+    long price;
+
+    double opCast(T : double)() const {
+        return price / 10_000.0;
+    }
 }
 
-auto getMessage(T, R) (R ptr) {
-    auto r = cast(T*) ptr;
-    return *r;
-}
-
+@serdeProxy!char
 enum MessageType : Byte {
     auctionInformation       = 0x41,
     securityDirectory        = 0x44,
@@ -79,234 +81,154 @@ enum MessageType : Byte {
 
 // IEX messages
 
-struct AuctionInformationMessage {
-    enum AuctionType : Byte {
-        O = 0x4f,
-        C = 0x43,
-        I = 0x49,
-        H = 0x48,
-        V = 0x56
-    }
+auto getMessage(T, R) (R ptr) {
+    auto r = cast(T*) ptr;
+    return *r;
+}
 
+struct AuctionInformationMessage {
     align(1):
     MessageType messageType;
-    AuctionType auctionType;
-    mixin(generateTime!Timestamp("timestamp"));
-    mixin(generateString!String("symbol"));
+    @serdeProxy!char
+    Byte auctionType;
+    Timestamp timestamp;
+    String symbol;
     Integer pairedShares;
-    mixin(generatePrice("referencePrice"));
-    mixin(generatePrice("indicativeClearingPrice"));
+    Price referencePrice;
+    Price indicativeClearingPrice;
     Integer imbalanceShares;
     Byte imbalanceSide;
     Byte extensionNumber;
-    mixin(generateTime!EventTime("scheduledAuctionTime"));
-    mixin(generatePrice("auctionBookClearingPrice"));
-    mixin(generatePrice("collarReferencePrice"));
-    mixin(generatePrice("lowerAuctionCollar"));
-    mixin(generatePrice("upperAuctionCollar"));
+    EventTime scheduleAuctionTime;
+    Price auctionBookClearingPrice;
+    Price collarReferencePrice;
+    Price lowerAuctionCollar;
+    Price upperAuctionCollar;
 }
 
 struct OfficialPriceMessage {
-    enum PriceType : Byte {
-        opening = 0x51,
-        closing = 0x4d
-    }
-
     align(1):
     MessageType messageType;
-    PriceType priceType;
-    mixin(generateTime!Timestamp("timestamp"));
-    mixin(generateString!String("symbol"));
-    mixin(generatePrice("officialPrice"));
+    @serdeProxy!char
+    Byte priceType;
+    Timestamp timestamp;
+    String symbol;
+    Price officialPrice;
 }
 
 struct OperationalHaltStatusMessage {
-    enum Status : Byte {
-        O = 0x4f,
-        N = 0x4e
-    }
-
     align(1):
     MessageType messageType;
-    Status operationalHaltStatus;
-    mixin(generateTime!Timestamp("timestamp"));
-    mixin(generateString!String("symbol"));
+    @serdeProxy!char
+    Byte operationalHaltStatus;
+    Timestamp timestamp;
+    String symbol;
 }
 
 struct QuoteUpdateMessage {
-    enum MarketSessionFlag {
-        regular = 0,
-        prePost = 1
-    }
-
-    enum SymbolAvailabilityFlag {
-        active    = 0,
-        notActive = 1
-    }
-
     struct QuoteUpdateFlags {
         mixin(bitfields!(
-            uint,                   "", 6,
-            MarketSessionFlag,      "marketSession", 1,
-            SymbolAvailabilityFlag, "symbolAvailability", 1));
+            uint,  "", 6,
+            ubyte, "marketSession", 1,
+            ubyte, "symbolAvailability", 1));
     }
 
     align(1):
     MessageType messageType;
     QuoteUpdateFlags flags;
-    mixin(generateTime!Timestamp("timestamp"));
-    mixin(generateString!String("symbol"));
+    Timestamp timestamp;
+    String symbol;
     Integer bidSize;
-    mixin(generatePrice("bidPrice"));
-    mixin(generatePrice("askPrice"));
+    Price bidPrice;
+    Price askPrice;
     Integer askSize;
 }
 
 struct RetailLiquidityIndicatorMessage {
-    enum Indicator : Byte {
-        NA = 0x20,
-        A  = 0x41,
-        B  = 0x42,
-        C  = 0x43
-    }
-
     align(1):
     MessageType messageType;
-    Indicator retailLiquidityIndicator;
-    mixin(generateTime!Timestamp("timestamp"));
-    mixin(generateString!String("symbol"));
+    @serdeProxy!char
+    Byte retailLiquidityIndicator;
+
+    Timestamp timestamp;
+    String symbol;
 }
 
 struct SecurityDirectoryMessage {
-    enum ETPFlag {
-        notETP = 0,
-        ETP    = 1
-    }
-
-    enum WhenIssuedFlag {
-        notWhenIssued = 0,
-        whenIssued    = 1
-    }
-
-    enum TestSecurityFlag {
-        notTest = 0,
-        test    = 1
-    }
-
     struct SecurityDirectoryFlags {
         mixin(bitfields!(
-            uint,             "", 5,
-            ETPFlag,          "etp", 1,
-            WhenIssuedFlag,   "whenIssued", 1,
-            TestSecurityFlag, "testSecurity", 1));
+            uint, "", 5,
+            ubyte, "ETP", 1,
+            ubyte, "whenIssued", 1,
+            ubyte, "testSecurity", 1));
     }
 
     align(1):
     MessageType messageType;
     SecurityDirectoryFlags flags;
-    mixin(generateTime!Timestamp("timestamp"));
-    mixin(generateString!String("symbol"));
+    Timestamp timestamp;
+    String symbol;
     Integer roundLotSize;
-    mixin(generatePrice("adjustedPOCPrice"));
+    Price adjustedPOCPrice;
+    @serdeProxy!uint
     Byte luldTier;
 }
 
 struct ShortSalePriceTestStatusMessage {
-    enum Status : Byte {
-        notInEffect = 0x0,
-        inEffect    = 0x1
-    }
-
-    enum Detail : Byte {
-        none         = 0x20,
-        activated    = 0x41,
-        continued    = 0x43,
-        deactivated  = 0x44,
-        notAvailable = 0x4e
-    }
-
     align(1):
     MessageType messageType;
-    Status shortSalePriceTestStatus;
-    mixin(generateTime!Timestamp("timestamp"));
-    mixin(generateString!String("symbol"));
-    Detail detail;
+    @serdeProxy!uint
+    Byte shortSalePriceTestStatus;
+    String symbol;
+    @serdeProxy!char
+    Byte detail;
 }
 
 struct SystemEventMessage {
     enum SystemEvent : Byte {
-        O = 0x4f,
-        S = 0x53,
-        R = 0x52,
-        M = 0x4d,
-        E = 0x45,
-        C = 0x43
+        startMessages = 0x4f,
+        startSystemHours = 0x53,
+        startRegularHours = 0x52,
+        endRegularHours = 0x4d,
+        endSystemHours = 0x45,
+        endMessages = 0x43
     }
 
     align(1):
     MessageType messageType;
-    SystemEvent systemEvent;
-    mixin(generateTime!Timestamp("timestamp"));
+    @serdeProxy!char
+    Byte systemEvent;
+    Timestamp timestamp;
 }
 
 struct TradeReportMessage {
-    enum IntermarketSweepFlag {
-        nonISO = 0,
-        ISO    = 1
-    }
-
-    enum ExtendedHoursFlag {
-        regular  = 0,
-        extended = 1
-    }
-
-    enum OddLotFlag {
-        roundMixed = 0,
-        oddLot     = 1
-    }
-
-    enum TradeThroughExemptFlag {
-        subjectToRule    = 0,
-        notSubjectToRule = 1
-    }
-
-    enum SinglePriceCrossTradeFlag {
-        continuousTrading = 0,
-        singlePriceCross  = 1
-    }
-
     struct SalesConditionFlags {
         mixin(bitfields!(
-            uint,                      "", 3,
-            SinglePriceCrossTradeFlag, "singlePriceCross", 1,
-            TradeThroughExemptFlag,    "tradeThroughExempt", 1,
-            OddLotFlag,                "oddLot", 1,
-            ExtendedHoursFlag,         "extendedHours", 1,
-            IntermarketSweepFlag,      "intermarketSweep", 1));
+            uint, "", 3,
+            uint, "singlePriceCross", 1,
+            uint, "tradeThroughExempt", 1,
+            uint, "oddLot", 1,
+            uint, "extendedHours", 1,
+            uint, "intermarketSweep", 1));
     }
 
     align(1):
     MessageType messageType;
     SalesConditionFlags saleConditionFlags;
-    mixin(generateTime!Timestamp("timestamp"));
-    mixin(generateString!String("symbol"));
+    Timestamp timestamp;
+
+    String symbol;
     Integer size;
-    mixin(generatePrice("price"));
+    Price price;
     Long tradeId;
 }
 
 struct TradingStatusMessage {
-    enum Status : Byte {
-        H = 0x48,
-        O = 0x4f,
-        P = 0x50,
-        T = 0x54
-    }
-
     align(1):
     MessageType messageType;
-    Status tradingStatus;
-    mixin(generateTime!Timestamp("timestamp"));
-    mixin(generateString!String("symbol"));
-    mixin(generateString!ShortString("reason"));
+    @serdeProxy!char
+    Byte tradingStatus;
+    Timestamp timestamp;
+    String symbol;
+    ShortString reason;
 }

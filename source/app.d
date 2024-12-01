@@ -7,7 +7,7 @@ import std.exception;
 import pcapng;
 import iex;
 
-import asdf;
+import mir.ser.json;
 import iopipe.bufpipe;
 import iopipe.zip;
 import iopipe.refc;
@@ -113,34 +113,34 @@ void main(string[] args) {
                             assert(0);
                             break;
                         case MessageType.systemEvent:
-                            payload.ptr.getMessage!SystemEventMessage.serializeToJson.writeln;
+                            payload.ptr.getMessage!SystemEventMessage.serializeJson.writeln;
                             break;
                         case MessageType.quoteUpdate:
-                            payload.ptr.getMessage!QuoteUpdateMessage.serializeToJson.writeln;
+                            payload.ptr.getMessage!QuoteUpdateMessage.serializeJson.writeln;
                             break;
                         case MessageType.shortSalePriceTestStatus:
-                            payload.ptr.getMessage!ShortSalePriceTestStatusMessage.serializeToJson.writeln;
+                            payload.ptr.getMessage!ShortSalePriceTestStatusMessage.serializeJson.writeln;
                             break;
                         case MessageType.tradeReport:
-                            payload.ptr.getMessage!TradeReportMessage.serializeToJson.writeln;
+                            payload.ptr.getMessage!TradeReportMessage.serializeJson.writeln;
                             break;
                         case MessageType.retailLiquidityIndicator:
-                            payload.ptr.getMessage!RetailLiquidityIndicatorMessage.serializeToJson.writeln;
+                            payload.ptr.getMessage!RetailLiquidityIndicatorMessage.serializeJson.writeln;
                             break;
                         case MessageType.auctionInformation:
-                            payload.ptr.getMessage!AuctionInformationMessage.serializeToJson.writeln;
+                            payload.ptr.getMessage!AuctionInformationMessage.serializeJson.writeln;
                             break;
                         case MessageType.tradingStatus:
-                            payload.ptr.getMessage!TradingStatusMessage.serializeToJson.writeln;
+                            payload.ptr.getMessage!TradingStatusMessage.serializeJson.writeln;
                             break;
                         case MessageType.operationalHaltStatus:
-                            payload.ptr.getMessage!OperationalHaltStatusMessage.serializeToJson.writeln;
+                            payload.ptr.getMessage!OperationalHaltStatusMessage.serializeJson.writeln;
                             break;
                         case MessageType.securityDirectory:
-                            payload.ptr.getMessage!SecurityDirectoryMessage.serializeToJson.writeln;
+                            payload.ptr.getMessage!SecurityDirectoryMessage.serializeJson.writeln;
                             break;
                         case MessageType.officialPrice:
-                            payload.ptr.getMessage!OfficialPriceMessage.serializeToJson.writeln;
+                            payload.ptr.getMessage!OfficialPriceMessage.serializeJson.writeln;
                             break;
                     }
                 }
