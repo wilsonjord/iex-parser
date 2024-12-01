@@ -79,11 +79,11 @@ void main(string[] args) {
 
                 auto blockLength = data.read!uint;
                 data.ensureElems(blockLength);
-                
+
                 // block length includes block type, and length, which have already been read
                 scope(exit) data.release(blockLength - (blockType.sizeof + blockLength.sizeof));
 
-                auto payload = data.window.take(blockLength); 
+                auto payload = data.window.take(blockLength);
 
                 // skip uninteresting fields
                 payload = payload.drop(
@@ -104,7 +104,7 @@ void main(string[] args) {
                 foreach (i; 0..messageCount) {
                     auto messageBlockLength = payload.read!(ushort, Endian.littleEndian);
                     if (messageBlockLength == 0) continue;
-                    
+
                     auto messageType = payload.peek!(ubyte, Endian.littleEndian);
                     scope(exit) payload = payload.drop(messageBlockLength);
                     switch (messageType) {
@@ -151,7 +151,7 @@ void main(string[] args) {
 
                 auto blockLength = data.read!uint;
                 auto magic = data.read!uint;
-                
+
                 if (magic != MagicNumber) {
                     // swap endian
                     toggleEndian;
@@ -165,10 +165,10 @@ void main(string[] args) {
                 break;
             case BlockType.interfaceDescription:
                 // use interface block to set Link Layer type
-                
+
                 auto blockLength = data.read!uint;
                 data.ensureElems(blockLength);
-                
+
                 auto linkType = data.iopPeek!ushort;
                 enforce(linkType == LinkType.ethernet, "only IEEE 802.3 Ethernet link type is supported");
 
