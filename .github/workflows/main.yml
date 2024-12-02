@@ -16,7 +16,8 @@ jobs:
 
       - name: Install D compiler
         uses: dlang-community/setup-dlang@v2
-        with: dmd
+        with:
+          compiler: dmd
 
       - name: Run tests
         run: dub test
