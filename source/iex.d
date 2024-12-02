@@ -232,3 +232,7 @@ struct TradingStatusMessage {
     String symbol;
     ShortString reason;
 }
+
+unittest {
+    assert(0);
+}
