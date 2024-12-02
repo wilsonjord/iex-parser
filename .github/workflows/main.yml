@@ -2,6 +2,8 @@ name: Main
 on:
   pull_request:
   push:
+    tags:
+      - '*'
     branches:
       - main
 
@@ -23,3 +25,30 @@ jobs:
 
       - name: Run tests
         run: dub test
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: webiny/action-conventional-commits@v1.3.0
+
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: ldc
+
+      - name: Create release binary
+        run: dub build --build=release
+
+      - name: Package - Linux
+        if: runner.os == 'Linux'
+        run: tar -zcvf iex-parser.tar.gz iex-parser
+
+      - name: Package - Windows
+        if: runner.os == 'Windows'
+        run: 7z a iex-parser.7z iex-parser.exe
+        # stuff here
