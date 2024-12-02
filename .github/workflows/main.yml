@@ -2,8 +2,13 @@ name: Main
 on:
   pull_request:
   push:
+    tags:
+      - "v*.*.*"
     branches:
       - main
+
+permissions:
+  contents: write
 
 jobs:
   test:
@@ -23,3 +28,42 @@ jobs:
 
       - name: Run tests
         run: dub test
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - if: runner.os == 'Linux'
+        run: |
+          echo "ASSET_NAME=iex-parser_${{ format('{0}_{1}_{2}.tar.gz', github.ref_name, runner.os, runner.arch) }}" >> "$GITHUB_ENV"
+
+      - if: runner.os == 'Windows'
+        run: |
+          echo "ASSET_NAME=iex-parser_${{ format('{0}_{1}_{2}.zip', github.ref_name, runner.os, runner.arch) }}" >> "$env:GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+
+      - uses: webiny/action-conventional-commits@v1.3.0
+
+      - name: Install D compiler
+        uses: dlang-community/setup-dlang@v2
+        with:
+          compiler: ldc
+
+      - name: Create release binary
+        run: dub build --build=release
+
+      - name: Package - Linux
+        if: runner.os == 'Linux'
+        run: tar -zcvf $ASSET_NAME iex-parser
+
+      - name: Package - Windows
+        if: runner.os == 'Windows'
+        run: Compress-Archive -Path iex-parser.exe -Destination $env:ASSET_NAME
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ env.ASSET_NAME }}
