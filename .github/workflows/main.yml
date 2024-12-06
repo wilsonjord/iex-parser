@@ -63,7 +63,38 @@ jobs:
         if: runner.os == 'Windows'
         run: Compress-Archive -Path iex-parser.exe -Destination $env:ASSET_NAME
 
+      - name: Build Changelog
+        id: github_release
+        uses: mikepenz/release-changelog-builder-action@v5
+        with:
+          mode: "COMMIT"
+          configurationJson: |
+            {
+              "template": "#{{CHANGELOG}}",
+              "categories": [
+                {
+                    "title": "## Feature",
+                    "labels": ["feat", "feature"]
+                },
+                {
+                    "title": "## Fix",
+                    "labels": ["fix", "bug"]
+                },
+                {
+                    "title": "## Other",
+                    "labels": []
+                }
+              ],
+              "label_extractor": [
+                {
+                  "pattern": "^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test){1}(\\([\\w\\-\\.]+\\))?(!)?: ([\\w ])+([\\s\\S]*)",
+                  "target": "$1"
+                }
+              ]
+            }
+
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
+          body: ${{ steps.github_release.outputs.changelog }}
           files: ${{ env.ASSET_NAME }}
