@@ -179,6 +179,7 @@ struct ShortSalePriceTestStatusMessage {
     MessageType messageType;
     @serdeProxy!uint
     Byte shortSalePriceTestStatus;
+    Timestamp timestamp;
     String symbol;
     @serdeProxy!char
     Byte detail;
