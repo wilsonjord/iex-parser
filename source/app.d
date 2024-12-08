@@ -48,7 +48,10 @@ auto iopPeek(T, R) (ref R range) {
 }
 
 void main(string[] args) {
-    auto cmd = new Program("IEX Parser", "0.2.1")
+    static immutable string[] VERSION = import(".VERSION").split;
+    assert(!VERSION.empty);
+
+    auto cmd = new Program("IEX Parser", VERSION.front)
         .author("Jordan K. Wilson <wilsonjord@gmail.com>")
         .add(new Argument("file", "IEX TOPS file"))
         .parse(args);
