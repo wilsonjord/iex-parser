@@ -115,6 +115,10 @@ void main(string[] args) {
                             writefln("TODO %X", messageType);
                             assert(0);
                             break;
+                        case MessageType.priceLevelUpdateBuySide:
+                        case MessageType.priceLevelUpdateSellSide:
+                            payload.ptr.getMessage!PriceLevelUpdateMessage.serializeJson.writeln;
+                            break;
                         case MessageType.systemEvent:
                             payload.ptr.getMessage!SystemEventMessage.serializeJson.writeln;
                             break;

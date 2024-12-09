@@ -67,6 +67,8 @@ struct Price {
 
 @serdeProxy!char
 enum MessageType : Byte {
+    priceLevelUpdateSellSide = 0x35,
+    priceLevelUpdateBuySide  = 0x38,
     auctionInformation       = 0x41,
     securityDirectory        = 0x44,
     tradingStatus            = 0x48,
@@ -123,6 +125,17 @@ struct OperationalHaltStatusMessage {
     Byte operationalHaltStatus;
     Timestamp timestamp;
     String symbol;
+}
+
+struct PriceLevelUpdateMessage {
+    align(1):
+    MessageType messageType;
+    @serdeProxy!uint
+    Byte eventFlags;
+    Timestamp timestamp;
+    String symbol;
+    Integer size;
+    Price price;
 }
 
 struct QuoteUpdateMessage {
