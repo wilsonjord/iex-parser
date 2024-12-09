@@ -71,6 +71,7 @@ enum MessageType : Byte {
     priceLevelUpdateBuySide  = 0x38,
     auctionInformation       = 0x41,
     securityDirectory        = 0x44,
+    securityEventMessage     = 0x45,
     tradingStatus            = 0x48,
     retailLiquidityIndicator = 0x49,
     operationalHaltStatus    = 0x4f,
@@ -185,6 +186,15 @@ struct SecurityDirectoryMessage {
     Price adjustedPOCPrice;
     @serdeProxy!uint
     Byte luldTier;
+}
+
+struct SecurityEventMessage {
+    align(1):
+    MessageType messageType;
+    @serdeProxy!char
+    Byte securityEvent;
+    Timestamp timestamp;
+    String symbol;
 }
 
 struct ShortSalePriceTestStatusMessage {
