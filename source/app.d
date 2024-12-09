@@ -119,6 +119,9 @@ void main(string[] args) {
                         case MessageType.priceLevelUpdateSellSide:
                             payload.ptr.getMessage!PriceLevelUpdateMessage.serializeJson.writeln;
                             break;
+                        case MessageType.securityEventMessage:
+                            payload.ptr.getMessage!SecurityEventMessage.serializeJson.writeln;
+                            break;
                         case MessageType.systemEvent:
                             payload.ptr.getMessage!SystemEventMessage.serializeJson.writeln;
                             break;
