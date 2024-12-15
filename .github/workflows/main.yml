@@ -47,6 +47,15 @@ jobs:
 
       - uses: webiny/action-conventional-commits@v1.3.0
 
+      - name: Get current version
+        id: current_version
+        run: |
+          echo "version=$(cat .VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Update version
+        run: |
+          echo "${{ github.ref_name }}" > .VERSION
+
       - name: Install D compiler
         uses: dlang-community/setup-dlang@v2
         with:
@@ -92,6 +101,8 @@ jobs:
                 }
               ]
             }
+          fromTag: ${{ steps.current_version.version }}
+          toTag: ${{ github.ref_name }}
 
       - name: Release
         uses: softprops/action-gh-release@v2
