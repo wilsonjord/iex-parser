@@ -151,6 +151,9 @@ void main(string[] args) {
                         case MessageType.officialPrice:
                             payload.ptr.getMessage!OfficialPriceMessage.serializeJson.writeln;
                             break;
+                        case MessageType.orderDelete:
+                            payload.ptr.getMessage!OrderDeleteMessage.serializeJson.writeln;
+                            break;
                     }
                 }
 

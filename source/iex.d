@@ -80,6 +80,7 @@ enum MessageType : Byte {
     operationalHaltStatus    = 0x4f,
     shortSalePriceTestStatus = 0x50,
     quoteUpdate              = 0x51,
+    orderDelete              = 0x52,
     systemEvent              = 0x53,
     tradeReport              = 0x54,
     officialPrice            = 0x58
@@ -183,6 +184,28 @@ unittest {
     // NOTE: timestamp skipped, specification contains a bad example value for timestamp
 
     message["symbol"].get!string.should.equal("ZIEXT");
+}
+
+struct OrderDeleteMessage {
+    align(1):
+    MessageType messageType;
+    Byte reserved;
+    Timestamp timestamp;
+    String symbol;
+    Long orderIdReference;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"5200b28fa5a0ab866d145a49455854202020968f060000000000";
+    auto message = getMessage!OrderDeleteMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("R");
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["orderIdReference"].get!long.should.equal(429974);
 }
 
 struct PriceLevelUpdateMessage {
