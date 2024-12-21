@@ -10,6 +10,9 @@ import std.bitmanip;
 import mir.ser.json;
 import mir.small_string;
 
+debug import std.stdio;
+debug import dshould;
+
 // IEX data types
 alias Long        = long;
 alias Integer     = int;
@@ -44,7 +47,7 @@ struct Timestamp {
 
     auto toString() const @safe {
         return time.convertIexTime;
-}
+    }
 }
 
 @serdeProxy!(const(char)[])
@@ -109,6 +112,34 @@ struct AuctionInformationMessage {
     Price upperAuctionCollar;
 }
 
+unittest {
+    import std.json;
+    auto data = hexString!"
+        4143ddc7f09a1a3ab6145a4945585420
+        2020a0860100241d0f0000000000181f
+        0f000000000010270000420080e6f458
+        0c210f0000000000c01c0f0000000000
+        a4990d0000000000dc9f100000000000";
+
+    auto message = getMessage!AuctionInformationMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("A");
+    message["auctionType"].get!string.should.equal("C");
+    message["timestamp"].get!string.should.equal("2017-04-17T15:50:12.462929Z");
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["pairedShares"].get!int.should.equal(100_000);
+    message["referencePrice"].get!double.should.equal(99.05);
+    message["indicativeClearingPrice"].get!double.should.equal(99.10);
+    message["imbalanceShares"].get!int.should.equal(10_000);
+    message["imbalanceSide"].get!int.should.equal(cast(int)'B');
+    message["extensionNumber"].get!int.should.equal(0);
+    message["scheduleAuctionTime"].get!string.should.equal("2017-04-17T16:00:00Z");
+    message["auctionBookClearingPrice"].get!double.should.equal(99.15);
+    message["collarReferencePrice"].get!double.should.equal(99.04);
+    message["lowerAuctionCollar"].get!double.should.equal(89.13);
+    message["upperAuctionCollar"].get!double.should.equal(108.95);
+}
+
 struct OfficialPriceMessage {
     align(1):
     MessageType messageType;
@@ -117,6 +148,18 @@ struct OfficialPriceMessage {
     Timestamp timestamp;
     String symbol;
     Price officialPrice;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"585100f0302a5b25b6145a49455854202020241d0f0000000000";
+    auto message = getMessage!OfficialPriceMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("X");
+    message["priceType"].get!string.should.equal("Q");
+    message["timestamp"].get!string.should.equal(SysTime(DateTime(2017, 4, 17, 9, 30, 0), UTC()).toISOExtString);
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["officialPrice"].get!double.should.equal(99.05);
 }
 
 struct OperationalHaltStatusMessage {
@@ -128,6 +171,19 @@ struct OperationalHaltStatusMessage {
     String symbol;
 }
 
+unittest {
+    import std.json;
+    auto data = hexString!"4f4fac63c02096866d145a49455854202020";
+    auto message = getMessage!OperationalHaltStatusMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("O");
+    message["operationalHaltStatus"].get!string.should.equal("O");
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
+}
+
 struct PriceLevelUpdateMessage {
     align(1):
     MessageType messageType;
@@ -137,6 +193,21 @@ struct PriceLevelUpdateMessage {
     String symbol;
     Integer size;
     Price price;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"3801ac63c02096866d145a49455854202020e4250000241d0f0000000000";
+    auto message = getMessage!PriceLevelUpdateMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("8");
+    message["eventFlags"].get!int.should.equal(1); // event processing complete
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["size"].get!int.should.equal(9700);
+    message["price"].get!double.should.equal(99.05);
 }
 
 struct QuoteUpdateMessage {
@@ -158,6 +229,24 @@ struct QuoteUpdateMessage {
     Integer askSize;
 }
 
+unittest {
+    import std.json;
+    auto data = hexString!"5100ac63c02096866d145A49455854202020e4250000241d0f0000000000ec1d0f0000000000e8030000";
+    auto message = getMessage!QuoteUpdateMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("Q");
+    message["flags"]["marketSession"].get!int.should.equal(0); // regular market session
+    message["flags"]["symbolAvailability"].get!int.should.equal(0); // symbol is active
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["bidSize"].get!int.should.equal(9700);
+    message["bidPrice"].get!double.should.equal(99.05);
+    message["askPrice"].get!double.should.equal(99.07);
+    message["askSize"].get!int.should.equal(1000);
+}
+
 struct RetailLiquidityIndicatorMessage {
     align(1):
     MessageType messageType;
@@ -166,6 +255,19 @@ struct RetailLiquidityIndicatorMessage {
 
     Timestamp timestamp;
     String symbol;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"4941ac63c02096866d145a49455854202020";
+    auto message = getMessage!RetailLiquidityIndicatorMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("I");
+    message["retailLiquidityIndicator"].get!string.should.equal("A");
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
 }
 
 struct SecurityDirectoryMessage {
@@ -188,6 +290,22 @@ struct SecurityDirectoryMessage {
     Byte luldTier;
 }
 
+unittest {
+    import std.json;
+    auto data = hexString!"44800020897b5a1fb6145a4945585420202064000000241d0f000000000001";
+    auto message = getMessage!SecurityDirectoryMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("D");
+    message["flags"]["testSecurity"].get!int.should.equal(1); // test security
+    message["flags"]["ETP"].get!int.should.equal(0); // not an ETP
+    message["flags"]["whenIssued"].get!int.should.equal(0); // not a When Issued security
+    message["timestamp"].get!string.should.equal(SysTime(DateTime(2017, 4, 17, 7, 40, 0), UTC()).toISOExtString);
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["roundLotSize"].get!int.should.equal(100);
+    message["adjustedPOCPrice"].get!double.should.equal(99.05);
+    message["luldTier"].get!int.should.equal(1);
+}
+
 struct SecurityEventMessage {
     align(1):
     MessageType messageType;
@@ -195,6 +313,17 @@ struct SecurityEventMessage {
     Byte securityEvent;
     Timestamp timestamp;
     String symbol;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"454f00f0302a5b25b6145a49455854202020";
+    auto message = getMessage!SecurityEventMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("E");
+    message["securityEvent"].get!string.should.equal("O");
+    message["timestamp"].get!string.should.equal(SysTime(DateTime(2017, 4, 17, 9, 30, 0), UTC()).toISOExtString);
+    message["symbol"].get!string.should.equal("ZIEXT");
 }
 
 struct ShortSalePriceTestStatusMessage {
@@ -206,6 +335,20 @@ struct ShortSalePriceTestStatusMessage {
     String symbol;
     @serdeProxy!char
     Byte detail;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"5001ac63c02096866d145a4945585420202041";
+    auto message = getMessage!ShortSalePriceTestStatusMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("P");
+    message["shortSalePriceTestStatus"].get!int.should.equal(1);
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["detail"].get!string.should.equal("A");
 }
 
 struct SystemEventMessage {
@@ -223,6 +366,16 @@ struct SystemEventMessage {
     @serdeProxy!char
     Byte systemEvent;
     Timestamp timestamp;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"534500a09997e93db614";
+    auto message = getMessage!SystemEventMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("S");
+    message["systemEvent"].get!string.should.equal("E");
+    message["timestamp"].get!string.should.equal(SysTime(DateTime(2017, 4, 17, 17, 0, 0), UTC()).toISOExtString);
 }
 
 struct TradeReportMessage {
@@ -247,6 +400,25 @@ struct TradeReportMessage {
     Long tradeId;
 }
 
+unittest {
+    import std.json;
+    auto data = hexString!"5400c3dff705a2866d145A4945585420202064000000241d0f0000000000968f060000000000";
+    auto message = getMessage!TradeReportMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("T");
+    message["saleConditionFlags"]["intermarketSweep"].get!int.should.equal(0); // non-ISO
+    message["saleConditionFlags"]["extendedHours"].get!int.should.equal(0); // regular market session
+    message["saleConditionFlags"]["oddLot"].get!int.should.equal(0); // round or mixed lot
+    message["saleConditionFlags"]["tradeThroughExempt"].get!int.should.equal(0); // trade is subject to Rule 611
+    message["saleConditionFlags"]["singlePriceCross"].get!int.should.equal(0); // execution during continuous trading
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["price"].get!double.should.equal(99.05);
+    message["tradeId"].get!long.should.equal(429974);
+}
+
 struct TradingStatusMessage {
     align(1):
     MessageType messageType;
@@ -255,4 +427,18 @@ struct TradingStatusMessage {
     Timestamp timestamp;
     String symbol;
     ShortString reason;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"4848ac63c02096866d145a4945585420202054312020";
+    auto message = getMessage!TradingStatusMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("H");
+    message["tradingStatus"].get!string.should.equal("H");
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["reason"].get!string.should.equal("T1");
 }
