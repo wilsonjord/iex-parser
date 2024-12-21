@@ -105,7 +105,7 @@ struct AuctionInformationMessage {
     Integer imbalanceShares;
     Byte imbalanceSide;
     Byte extensionNumber;
-    EventTime scheduleAuctionTime;
+    EventTime scheduledAuctionTime;
     Price auctionBookClearingPrice;
     Price collarReferencePrice;
     Price lowerAuctionCollar;
@@ -133,7 +133,7 @@ unittest {
     message["imbalanceShares"].get!int.should.equal(10_000);
     message["imbalanceSide"].get!int.should.equal(cast(int)'B');
     message["extensionNumber"].get!int.should.equal(0);
-    message["scheduleAuctionTime"].get!string.should.equal("2017-04-17T16:00:00Z");
+    message["scheduledAuctionTime"].get!string.should.equal("2017-04-17T16:00:00Z");
     message["auctionBookClearingPrice"].get!double.should.equal(99.15);
     message["collarReferencePrice"].get!double.should.equal(99.04);
     message["lowerAuctionCollar"].get!double.should.equal(89.13);
