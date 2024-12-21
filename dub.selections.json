@@ -2,12 +2,15 @@
 	"fileVersion": 1,
 	"versions": {
 		"commandr": "1.1.0",
+		"dshould": "1.7.2",
 		"io": "0.3.5",
 		"iopipe": "0.2.5",
 		"mir-algorithm": "3.22.1",
 		"mir-core": "1.7.1",
 		"mir-cpuid": "1.2.11",
 		"mir-ion": "2.3.2",
-		"silly": "1.1.1"
+		"prettyprint": "1.0.9",
+		"silly": "1.1.1",
+		"unit-threaded": "2.2.0"
 	}
 }
