@@ -112,8 +112,7 @@ void main(string[] args) {
                     scope(exit) payload = payload.drop(messageBlockLength);
                     switch (messageType) {
                         default:
-                            writefln("TODO %X", messageType);
-                            assert(0);
+                            stderr.writefln("Can't understanding message %X, skipping", messageType);
                             break;
                         case MessageType.priceLevelUpdateBuySide:
                         case MessageType.priceLevelUpdateSellSide:
