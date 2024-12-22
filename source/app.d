@@ -157,6 +157,9 @@ void main(string[] args) {
                         case MessageType.addOrder:
                             payload.ptr.getMessage!AddOrderMessage.serializeJson.writeln;
                             break;
+                        case MessageType.orderModify:
+                            payload.ptr.getMessage!OrderModifyMessage.serializeJson.writeln;
+                            break;
                     }
                 }
 
