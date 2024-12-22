@@ -77,6 +77,7 @@ enum MessageType : Byte {
     securityEventMessage     = 0x45,
     tradingStatus            = 0x48,
     retailLiquidityIndicator = 0x49,
+    orderModify              = 0x4d,
     operationalHaltStatus    = 0x4f,
     shortSalePriceTestStatus = 0x50,
     quoteUpdate              = 0x51,
@@ -235,6 +236,39 @@ unittest {
 
     message["symbol"].get!string.should.equal("ZIEXT");
     message["orderIdReference"].get!long.should.equal(429974);
+}
+
+struct OrderModifyMessage {
+    struct OrderModifyFlags {
+        mixin(bitfields!(
+            uint, "", 7,
+            ubyte, "priority", 1));
+    }
+    align(1):
+    MessageType messageType;
+    OrderModifyFlags modifyFlags;
+    Timestamp timestamp;
+    String symbol;
+    Long orderIdReference;
+    Integer size;
+    Price price;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"4d00b28fa5a0ab866d145a49455854202020968f06000000000064000000241d0f0000000000";
+
+    auto message = getMessage!OrderModifyMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("M");
+    message["modifyFlags"]["priority"].get!int.should.equal(0); // reset priority
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["orderIdReference"].get!long.should.equal(429974);
+    message["size"].get!int.should.equal(100);
+    message["price"].get!double.should.equal(99.05);
 }
 
 struct PriceLevelUpdateMessage {
