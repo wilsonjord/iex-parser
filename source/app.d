@@ -160,6 +160,9 @@ void main(string[] args) {
                         case MessageType.orderModify:
                             payload.ptr.getMessage!OrderModifyMessage.serializeJson.writeln;
                             break;
+                        case MessageType.orderExecuted:
+                            payload.ptr.getMessage!OrderExecutedMessage.serializeJson.writeln;
+                            break;
                     }
                 }
 
