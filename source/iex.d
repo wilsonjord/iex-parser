@@ -68,6 +68,16 @@ struct Price {
     }
 }
 
+struct SalesConditionFlags {
+    mixin(bitfields!(
+        uint, "", 3,
+        uint, "singlePriceCross", 1,
+        uint, "tradeThroughExempt", 1,
+        uint, "oddLot", 1,
+        uint, "extendedHours", 1,
+        uint, "intermarketSweep", 1));
+}
+
 @serdeProxy!char
 enum MessageType : Byte {
     priceLevelUpdateSellSide = 0x35,
@@ -77,6 +87,7 @@ enum MessageType : Byte {
     securityEventMessage     = 0x45,
     tradingStatus            = 0x48,
     retailLiquidityIndicator = 0x49,
+    orderExecuted            = 0x4c,
     orderModify              = 0x4d,
     operationalHaltStatus    = 0x4f,
     shortSalePriceTestStatus = 0x50,
@@ -236,6 +247,43 @@ unittest {
 
     message["symbol"].get!string.should.equal("ZIEXT");
     message["orderIdReference"].get!long.should.equal(429974);
+}
+
+struct OrderExecutedMessage {
+    align(1):
+    MessageType messageType;
+    SalesConditionFlags saleConditionFlags;
+    Timestamp timestamp;
+    String symbol;
+    Long orderIdReference;
+    Integer size;
+    Price price;
+    Long tradeId;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"
+        4c00b28fa5a0ab866d145a4945585420
+        2020968f06000000000064000000241d
+        0f0000000000968f020000000000";
+
+    auto message = getMessage!OrderExecutedMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("L");
+    message["saleConditionFlags"]["intermarketSweep"].get!int.should.equal(0); // non-ISO
+    message["saleConditionFlags"]["extendedHours"].get!int.should.equal(0); // regular market session
+    message["saleConditionFlags"]["oddLot"].get!int.should.equal(0); // round or mixed lot
+    message["saleConditionFlags"]["tradeThroughExempt"].get!int.should.equal(0); // trade is subject to Rule 611
+    message["saleConditionFlags"]["singlePriceCross"].get!int.should.equal(0); // execution during continuous trading
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["orderIdReference"].get!long.should.equal(429974);
+    message["size"].get!int.should.equal(100);
+    message["price"].get!double.should.equal(99.05);
+    message["tradeId"].get!long.should.equal(167830);
 }
 
 struct OrderModifyMessage {
@@ -466,15 +514,6 @@ unittest {
 }
 
 struct TradeReportMessage {
-    struct SalesConditionFlags {
-        mixin(bitfields!(
-            uint, "", 3,
-            uint, "singlePriceCross", 1,
-            uint, "tradeThroughExempt", 1,
-            uint, "oddLot", 1,
-            uint, "extendedHours", 1,
-            uint, "intermarketSweep", 1));
-    }
 
     align(1):
     MessageType messageType;
