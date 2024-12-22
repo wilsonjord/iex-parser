@@ -83,7 +83,8 @@ enum MessageType : Byte {
     orderDelete              = 0x52,
     systemEvent              = 0x53,
     tradeReport              = 0x54,
-    officialPrice            = 0x58
+    officialPrice            = 0x58,
+    addOrder                 = 0x61
 }
 
 // IEX messages
@@ -91,6 +92,34 @@ enum MessageType : Byte {
 auto getMessage(T, R) (R ptr) {
     auto r = cast(T*) ptr;
     return *r;
+}
+
+struct AddOrderMessage {
+    align(1):
+    MessageType messageType;
+    @serdeProxy!char
+    Byte side;
+    Timestamp timestamp;
+    String symbol;
+    Long orderId;
+    Integer size;
+    Price price;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"6138b28fa5a0ab866d145a49455854202020968f06000000000064000000241d0f0000000000";
+
+    auto message = getMessage!AddOrderMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("a");
+    message["side"].get!string.should.equal("8");
+
+    // NOTE: timestamp skipped, specification contains a bad example value for timestamp
+
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["orderId"].get!long.should.equal(429974);
+    message["price"].get!double.should.equal(99.05);
 }
 
 struct AuctionInformationMessage {
