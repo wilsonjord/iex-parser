@@ -3,9 +3,13 @@
 A parser that reads IEX market data, and outputs it to json.
 
 Currently supports:
-- IEX TOPS (v1.6)
+- IEX TOPS (v1.5, v1.6)
 - IEX DEEP (v1.0)
 - IEX DPLS (v1.0)
+
+Both capture file formats used by IEX Historical Data are supported:
+- pcapng (current downloads)
+- pcap (older downloads, e.g. the 2016 TOPS v1.5 feeds)
 
 The json output generally corresponds with IEX's format specifications:
 - field names are camel case versions of their specification (e.g. "Round Lot Size" -> `roundLotSize`)
