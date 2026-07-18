@@ -83,6 +83,7 @@ enum MessageType : Byte {
     priceLevelUpdateSellSide = 0x35,
     priceLevelUpdateBuySide  = 0x38,
     auctionInformation       = 0x41,
+    tradeBreak               = 0x42,
     securityDirectory        = 0x44,
     securityEventMessage     = 0x45,
     tradingStatus            = 0x48,
@@ -541,6 +542,32 @@ unittest {
     // NOTE: timestamp skipped, specification contains a bad example value for timestamp
 
     message["symbol"].get!string.should.equal("ZIEXT");
+    message["price"].get!double.should.equal(99.05);
+    message["tradeId"].get!long.should.equal(429974);
+}
+
+// same wire layout as TradeReportMessage; references the tradeId being broken
+struct TradeBreakMessage {
+
+    align(1):
+    MessageType messageType;
+    SalesConditionFlags saleConditionFlags;
+    Timestamp timestamp;
+
+    String symbol;
+    Integer size;
+    Price price;
+    Long tradeId;
+}
+
+unittest {
+    import std.json;
+    auto data = hexString!"4200c3dff705a2866d145A4945585420202064000000241d0f0000000000968f060000000000";
+    auto message = getMessage!TradeBreakMessage(data).serializeJson.parseJSON;
+
+    message["messageType"].get!string.should.equal("B");
+    message["symbol"].get!string.should.equal("ZIEXT");
+    message["size"].get!int.should.equal(100);
     message["price"].get!double.should.equal(99.05);
     message["tradeId"].get!long.should.equal(429974);
 }
